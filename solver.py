@@ -3,10 +3,13 @@ import numpy as np
 
 
 def _wavenumbers(n: int) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    kx = np.fft.fftfreq(n, d=1.0 / n)[:, None]
+    kx = np.fft.fftfreq(n, d=1.0 / n)[:, None] # convert to spatial frequencies to make grad a simple multiplication by ik 
     ky = np.fft.rfftfreq(n, d=1.0 / n)[None, :]
     k2 = kx ** 2 + ky ** 2
-    k2_safe = np.where(k2 == 0.0, 1.0, k2)
+    k2_safe = np.where(k2 == 0.0, 1.0, k2) #avoid divide by zero on laplacian
+    
+    # Multiplying two waves creates doubled frequencies too fast for the grid,
+    # which fold back as fake low-frequency energy; zeroing the top 1/3 prevents this.
     dealias = (np.abs(kx) <= n / 3.0) & (np.abs(ky) <= n / 3.0)
     return kx, ky, k2, k2_safe, dealias
 
